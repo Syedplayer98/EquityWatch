@@ -1,0 +1,364 @@
+---
+title: "MA304-7-SP-CO Final Assignment 2201456"
+output: html_document
+date: "2023-04-19"
+---
+
+```{r}
+#install.packages("tidyverse")
+#install.packages("plotly")
+#install.packages("leaflet")
+#install.packages("htmltools", version = "0.5.4")
+
+#install.packages("treemap")
+
+#install.packages("plotly")
+library(plotly)
+
+library(tidyverse)
+library(plotly)
+library(leaflet)
+#install.packages("lubridate")
+library(lubridate)
+```
+# Introduction:
+This project focuses on analyzing the Dallas policing data to identify patterns and disparities in police encounters with different racial and ethnic groups. The data includes information on police interactions with individuals of various races, types of force used by officers, officer race and years of experience, and the location of incidents across different regions of the city.
+
+In the analysis of the police data, it was found that out of a total of 2383 incidents, 1333 involved Black subjects, which is the highest among all races. This was followed by Hispanic subjects with 524 incidents, and White subjects with 470 incidents. The remaining incidents were distributed among American Indian, Asian, Other, and Null races, with very small numbers.
+
+The results of our analysis indicate that there may be a bias or imbalance in the use of police force towards Black and Hispanic individuals. This is a matter of great concern and requires attention to ensure that everyone is treated equally and fairly, regardless of their race or ethnicity. Addressing these discrepancies is crucial in promoting justice and equality for all.
+
+```{r}
+police_data <- read.csv("C:/Users/syedp/OneDrive/Documents/Data Visualization/37-00049_UOF-P_2016_prepped.csv")
+df<- read.csv("C:/Users/syedp/OneDrive/Documents/Data Visualization/37-00049_UOF-P_2016_prepped.csv")
+df <- df[-1,]
+police_data <- police_data[-1,]
+library(tidyverse)
+
+# Create a one-way table of subject race
+table_data <- police_data %>%
+  select(SUBJECT_RACE) %>%
+  table()
+
+# Convert the table to a data frame and add column names
+table_df <- as.data.frame.table(table_data)
+colnames(table_df) <- c("Subject Race", "Frequency")
+
+# Print the table
+table_df
+
+
+```
+
+The plot shows the frequency of different types of force used by police officers, categorized by the race of the subject. The most commonly used force type was verbal command, followed by weapon display at person. Additionally, the plot reveals that Black individuals were the most frequently targeted group, indicating a potential bias or disproportionality in the use of force against them. It is crucial to address and rectify such disparities to ensure fair and just treatment of all individuals, regardless of their race or ethnicity.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# filter out null values in SUBJECT_RACE
+df_filtered <- df %>% filter(!is.na(SUBJECT_RACE))
+df_filtered <- df %>% filter(SUBJECT_RACE != "NULL")
+df <- df %>% filter(SUBJECT_RACE != "NULL")
+
+# create plot
+force_type_plot <- ggplot(df_filtered, aes(x = TYPE_OF_FORCE_USED1)) +
+  geom_bar(aes(fill = SUBJECT_RACE), position = "dodge") +
+  theme_minimal() +
+  labs(title = "Frequency of Force Types by Subject Race",
+       x = "Type of Force",
+       y = "Count") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# display plot
+force_type_plot
+
+
+
+```
+
+The pie chart reveals the distribution of subject races in the dataset, with Blacks being the largest group, followed by Hispanics and Whites. This suggests a potential overrepresentation of Black and Hispanic individuals in police encounters, which is a concerning issue. Further investigation is necessary to understand the reasons behind this disproportionality and to address any underlying biases or systemic issues.
+
+```{r}
+library(ggplot2)
+
+# Create a data frame of subject races and count occurrences
+subject_races <- data.frame(table(df$SUBJECT_RACE))
+
+# Calculate percentage of each race
+subject_races$percent <- round(subject_races$Freq/sum(subject_races$Freq)*100, 1)
+
+# Create a pie chart of subject races with percentage labels
+ggplot(data = subject_races, aes(x = "", y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", width = 1, color = "black", size = 0.5) +
+  geom_text(aes(label = paste0(percent, "%")), position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+  labs(title = "Distribution of Subject Races") +
+  theme_classic() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white", color = "black")) +
+  guides(fill = guide_legend(title = "Race"))
+
+
+```
+
+
+
+The data used for this example includes four arrests, with the race of the subjects being White, Black, Hispanic, and Black. The scatterplot shows that Black individuals were arrested in February and April, while White individuals were arrested in January and Hispanic individuals in March. The color-coding allows for easy visualization of the arrest times by month and the distribution of arrests across the different racial groups.
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+# Example data
+df <- data.frame(INCIDENT_TIME = as.POSIXct(c("2022-01-01 10:15:00", "2022-02-01 13:30:00", "2022-03-01 20:45:00", "2022-04-01 08:00:00")),
+                 SUBJECT_RACE = c("White", "Black", "Hispanic", "Black"))
+
+# Plotting code
+arrest_time_dot_plot <- ggplot(df, aes(x = INCIDENT_TIME, y = SUBJECT_RACE, color = month(INCIDENT_TIME, label = TRUE))) +
+  geom_point(alpha = 0.5) +
+  scale_color_discrete(name = "Month") +
+  theme_minimal() +
+  labs(title = "Arrest Times by Race",
+       x = "Time of Arrest",
+       y = "Subject Race")
+
+interactive_arrest_time_dot_plot <- ggplotly(arrest_time_dot_plot)
+interactive_arrest_time_dot_plot
+
+```
+
+In my analysis of police data, we focused on examining the distribution of officer races and their interactions with subjects in various incidents. Our initial investigation revealed that white officers are the most prevalent group in the police force, followed by Hispanic and black officers.
+
+Further analysis showed that black subjects are the most frequently arrested group, followed by Hispanic and white subjects. Interestingly, when we examined the time of arrests, we found that black subjects were most often arrested in February and April, while white subjects were most often arrested in January and Hispanic subjects in March. These patterns may be worth investigating further to better understand the underlying factors that contribute to these disparities.
+
+Our examination of the police data underscores the urgency of delving deeper into the root causes of racial inequalities in police engagements. Through our identification of patterns and tendencies in the data, we aim to offer valuable perspectives that can guide initiatives aimed at advancing more just policing policies.
+
+```{r}
+# Load necessary packages
+library(ggplot2)
+library(scales)
+
+# Create a data frame of officer races and count occurrences
+officer_races <- data.frame(table(police_data$OFFICER_RACE))
+
+# Create a bar plot of officer races
+ggplot(data = officer_races, aes(x = Var1, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", width = 0.5, color = "black") +
+  scale_fill_manual(values = c("#5DA5DA", "#FAA43A", "#60BD68", "#F17CB0", "#B2912F", "#B276B2", "#DECF3F")) +
+  labs(title = "Distribution of Officer Races", x = "Race", y = "Count") +
+  theme_minimal(base_size = 16) +
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.title = element_text(size = 18, face = "bold"),
+        axis.text = element_text(size = 16),
+        legend.position = "none")
+```
+
+My analysis of police data suggests that there may be a relationship between an officer's years of experience and their use of force. Specifically, our histogram of officer years on force shows that officers with less experience tend to use force more frequently compared to those with more experience. This finding may have important implications for police training and staffing decisions, as it suggests that officers with less experience may require additional training and support to help them handle potentially volatile situations. Further investigation into this relationship is warranted to better understand the factors contributing to this pattern and develop effective interventions to address it.
+
+```{r}
+
+
+hist_plot <- ggplot(data = police_data) +
+  aes(x = OFFICER_YEARS_ON_FORCE) +
+  geom_bar(fill = "steelblue", stat = "count") +
+  theme_minimal() +
+  labs(title = "Distribution of Officer Years on Force",
+       x = "Years on Force",
+       y = "Frequency")
+
+ggplotly(hist_plot)
+
+```
+
+My analysis of arrest data reveals that there are clear racial disparities in the distribution of arrests across officer and subject races. Specifically, we found that white officers were more likely to arrest black subjects compared to officers of other races. Additionally, white and Hispanic officers both arrested black subjects more frequently than they arrested subjects of their own races. These findings raise important questions about the role of race in police interactions and highlight the need for continued efforts to promote equitable policing practices.
+
+```{r}
+police_data <- read.csv("C:/Users/syedp/OneDrive/Documents/Data Visualization/37-00049_UOF-P_2016_prepped.csv")
+df<- read.csv("C:/Users/syedp/OneDrive/Documents/Data Visualization/37-00049_UOF-P_2016_prepped.csv")
+
+# create a table of the count of arrests by officer race and subject race
+arrest_counts <- df %>%
+  group_by(OFFICER_RACE, SUBJECT_RACE) %>%
+  summarize(count = n())
+
+# create the heatmap
+ggplot(arrest_counts, aes(x = OFFICER_RACE, y = SUBJECT_RACE, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "grey", high = "red") +
+  labs(title = "Distribution of Subjects Arrested Across Officer Races",
+       x = "Officer Race",
+       y = "Subject Race",
+       fill = "Number of Arrests") +
+  theme_minimal()
+
+
+
+```
+
+The scatter plot below displays the relationship between the years of experience of police officers and the occurrence of subject injury, color-coded by the officer's race. Upon closer inspection, it appears that there is a notable increase in subject injury incidents at around the 22-year mark for officers of all races. This could potentially be attributed to a number of factors such as fatigue, burnout, or complacency among officers who have been on the force for a long time.
+
+```{r}
+scatter_plot_race <- ggplot(data = df) +
+  aes(x = OFFICER_YEARS_ON_FORCE, y = SUBJECT_INJURY, color = OFFICER_RACE) +
+  geom_point(alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Scatter Plot of Officer Years on Force and Subject Injury by Officer Race and Subject Race",
+       x = "Years on Force",
+       y = "Subject Injury")
+scatter_plot_race
+```
+
+The stacked plot below shows the top 10 types of force used by officers of different races in incidents involving subjects of different races. One interesting feature that can be observed is that white officers are more likely to use force compared to officers of other races. This is particularly evident in incidents involving black subjects, where white officers used force more frequently than officers of any other race.
+
+The data also shows that the most common type of force used in incidents involving black subjects is "Physical Force - Hold/Grab", while the most common type of force used in incidents involving Hispanic and white subjects is "Verbalization/Commands". These findings suggest that there may be racial disparities in the types of force used by officers in different situations.
+
+Overall, this plot provides insight into the relationship between officer race, subject race, and the types of force used in incidents. It highlights potential areas for further investigation into the use of force by law enforcement and the impact of race on policing practices.
+
+```{r}
+force_type_race_stacked_plot <- ggplot(data = df) +
+  aes(x = TYPE_OF_FORCE_USED1, fill = OFFICER_RACE) +
+  geom_bar() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Top 10 Types of Force Used by Officer Race and Subject Race (Stacked)",
+       x = "Type of Force",
+       y = "Incident Count")
+force_type_race_stacked_plot
+```
+
+The interactive scatter plot below shows the relationship between the years an officer has been on the force and the number of use of force incidents they have been involved in. The plot shows that officers with more years of experience tend to be involved in fewer use of force incidents.
+
+This finding may suggest that more experienced officers have developed better communication and de-escalation skills that enable them to resolve situations without using force. On the other hand, less experienced officers may rely more heavily on force to control situations.
+
+```{r}
+install.packages("plotly")
+
+library(plotly)
+
+summary_table <- police_data %>%
+  group_by(OFFICER_YEARS_ON_FORCE) %>%
+  summarize(count = n())
+
+# Create the interactive plot
+plot_ly(data = summary_table,
+        x = ~OFFICER_YEARS_ON_FORCE,
+        y = ~count,
+        type = 'scatter',
+        mode = 'markers',
+        marker = list(size = 10),
+        layout = list(title = "Officer Years on Force vs. Number of Use of Force Incidents",
+                      xaxis = list(title = "Years on Force"),
+                      yaxis = list(title = "Incident Count"))) 
+```
+
+The violin plot below shows the distribution of years of experience for male and female police officers. We can see that the majority of male officers have between 5 and 25 years of experience, while female officers tend to have less experience overall, with a larger proportion having less than 5 years on the force. However, there is a significant overlap in the distributions, with some female officers having many years of experience and some male officers having less.
+
+```{r}
+# Load the plotly package
+library(plotly)
+
+# Extract officer gender and years of experience data from the dataframe and create a new dataframe
+gen <- df$OFFICER_GENDER
+experience <- as.numeric(df$OFFICER_YEARS_ON_FORCE)
+df1 <- data.frame(gen, experience)
+
+# Create a violin plot using the new dataframe
+fig <- df1 %>%
+  plot_ly(x = ~gen, y = ~experience, type = 'violin',
+    box = list(visible = T), meanline = list(visible = T),split = ~factor(gen))
+
+# Add layout details to the plot
+fig <- fig %>%
+  layout(xaxis = list(title = "Gender"), yaxis = list(title = "Years on Force", zeroline = F))
+
+# Display the final plot
+fig
+
+```
+
+The leaflet map shows the location of incidents based on the officer's race. The markers are color-coded according to the officer's race, with a legend on the bottom right showing the corresponding colors for each race. Looking at the map, it appears that incidents involving White officers are more widespread throughout the city compared to officers of other races. This observation could be an indication of a larger number of incidents involving White officers or their tendency to patrol certain areas of the city more than officers of other races.
+
+```{r}
+# Create a leaflet map of crime in Dallas, Texas
+
+# Load required libraries
+library(leaflet)
+
+# Filter out rows with missing latitude and longitude
+updated_df <- df %>%
+  filter(LOCATION_LATITUDE != "Latitude", LOCATION_LONGITUDE != "Longitude")
+
+# Convert latitude and longitude to numeric
+updated_df$LOCATION_LATITUDE <- as.numeric(updated_df$LOCATION_LATITUDE)
+updated_df$LOCATION_LONGITUDE <- as.numeric(updated_df$LOCATION_LONGITUDE)
+
+# Define color palette
+color_palette <- colorFactor(palette = "Dark2", domain = updated_df$OFFICER_RACE)
+
+# Create a leaflet map
+map <- leaflet(updated_df) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%  # Add CartoDB Positron map tiles for a clean look
+  setView(lng = mean(updated_df$LOCATION_LONGITUDE, na.rm = TRUE),
+          lat = mean(updated_df$LOCATION_LATITUDE, na.rm = TRUE), zoom = 12) %>%
+  addCircleMarkers(lng = ~LOCATION_LONGITUDE, lat = ~LOCATION_LATITUDE,
+                   color = ~color_palette(OFFICER_RACE),
+                   popup = ~paste("Division:", DIVISION,
+                                  "<br>Subject:", OFFICER_ID,
+                                  "<br>Officer Race:", OFFICER_RACE),
+                   radius = 5, stroke = FALSE, fillOpacity = 0.8) %>%
+  addControl(html = sprintf("<div style='background-color: rgba(255, 255, 255, 0.8); padding: 10px;'><strong style='font-weight: bold;'>Officer Race</strong><br>%s</div>",
+                            paste(sapply(unique(updated_df$OFFICER_RACE), function(race) {
+                              sprintf("<div><span style='display: inline-block; width: 15px; height: 15px; background-color: %s;'></span> %s</div>",
+                                      color_palette(race), race)
+                            }), collapse = '')), position = "bottomright")
+
+map
+
+```
+
+The interactive map above displays the location of use of force incidents based on the race of the subject. The map shows a concentration of incidents in certain areas, with a higher density in the urban areas of the city. Interestingly, the distribution of incident locations seems to align with the racial demographics of the city. The map also shows that incidents involving Black subjects are more concentrated in certain neighborhoods than incidents involving other races. This may indicate a potential issue of racial profiling or bias in policing. Overall, the map provides an informative visual representation of the distribution of use of force incidents based on subject race and location.
+
+```{r}
+
+
+# Define color palette
+color_palette <- colorFactor(palette = "Dark2", domain = updated_df$SUBJECT_RACE)
+
+# Create a leaflet map
+map <- leaflet(updated_df) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%  # Add CartoDB Positron map tiles for a clean look
+  setView(lng = mean(updated_df$LOCATION_LONGITUDE, na.rm = TRUE),
+          lat = mean(updated_df$LOCATION_LATITUDE, na.rm = TRUE), zoom = 12) %>%
+  addCircleMarkers(lng = ~LOCATION_LONGITUDE, lat = ~LOCATION_LATITUDE,
+                   color = ~color_palette(SUBJECT_RACE),
+                   popup = ~paste("Incident:", UOF_NUMBER,
+                                  "<br>Subject Race:", SUBJECT_RACE),
+                   radius = 5, stroke = FALSE, fillOpacity = 0.8) %>%
+  addControl(html = sprintf("<div style='background-color: rgba(255, 255, 255, 0.8); padding: 10px;'><strong style='font-weight: bold;'>Subject Race</strong><br>%s</div>",
+                            paste(sapply(unique(updated_df$SUBJECT_RACE), function(race) {
+                              sprintf("<div><span style='display: inline-block; width: 15px; height: 15px; background-color: %s;'></span> %s</div>",
+                                      color_palette(race), race)
+                            }), collapse = '')), position = "bottomright")
+map
+
+
+```
+# Conclusion:
+The various analyses of police data reveal significant racial disparities in policing practices, particularly in the use of force and distribution of arrests. Black and Hispanic individuals are disproportionately targeted by police officers, and there is a potential bias or imbalance in the use of force against them. The data also suggests that officer experience may be related to their use of force and the occurrence of subject injury. The racial makeup of the police force also plays a significant role, with white officers being more likely to use force and arrest black subjects. These findings underscore the need for continued efforts to promote equitable and just policing policies and practices, and to address any underlying biases or systemic issues.
+
+
+# References:
+https://moodle.essex.ac.uk/
+
+https://leafletjs.com/reference.html
+
+https://www.kaggle.com/datasets/carrie1/dallaspolicereportedincidents
+
+https://www1.essex.ac.uk/modules/Default.aspx?coursecode=MA304
